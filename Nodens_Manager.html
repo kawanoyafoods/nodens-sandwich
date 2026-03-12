@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Nodens Manager Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --cream:#fdf6ec;--warm:#f5e6c8;--brown:#3d1f0a;--mid:#7a3b1e;
+  --amber:#c8621a;--gold:#e8a435;--soft:#f9f0e0;--text:#2a1206;
+  --muted:#8a6650;--border:rgba(61,31,10,.12);--green:#2d6a4f;
+  --green2:#4caf82;--red:#c0392b;--blue2:#5b8dd9;
+  --sidebar:240px;--serif:'Playfair Display',serif;--sans:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--soft);color:var(--text);display:flex;min-height:100vh;overflow-x:hidden}
+.sidebar{width:var(--sidebar);background:var(--brown);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.sidebar-logo{padding:1.3rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.07)}
+.sidebar-logo-main{font-family:var(--serif);font-size:1.1rem;color:var(--gold);font-weight:700}
+.sidebar-logo-sub{font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:.1rem}
+.badge-pill{display:inline-flex;align-items:center;gap:.25rem;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .5rem;border-radius:4px;font-weight:700;margin-top:.5rem}
+.bp-super{background:rgba(232,164,53,.18);color:#c8a000;border:1px solid rgba(232,164,53,.3)}
+.bp-moderator{background:rgba(45,106,79,.15);color:var(--green2);border:1px solid rgba(45,106,79,.25)}
+.bp-manager{background:rgba(91,141,217,.15);color:var(--blue2);border:1px solid rgba(91,141,217,.25)}
+.bp-viewer{background:rgba(255,255,255,.07);color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1)}
+.bp-custom{background:rgba(200,98,26,.15);color:var(--gold);border:1px solid rgba(200,98,26,.25)}
+.sidebar-nav{flex:1;padding:.6rem 0;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:.7rem;padding:.7rem 1.2rem;cursor:pointer;font-size:.76rem;color:rgba(255,255,255,.45);transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:var(--sans);border-left:3px solid transparent}
+.nav-item:hover{color:var(--cream);background:rgba(255,255,255,.05);border-left-color:rgba(232,164,53,.3)}
+.nav-item.active{color:var(--gold);background:rgba(232,164,53,.1);border-left-color:var(--gold)}
+.nav-icon{font-size:.9rem;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{background:var(--red);color:#fff;font-size:.55rem;padding:.1rem .38rem;border-radius:10px;margin-left:auto;font-weight:700}
+.sidebar-user{padding:.8rem 1.2rem;border-top:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.06)}
+.su-name{font-size:.8rem;font-weight:600;color:#fff}
+.su-email{font-size:.62rem;color:rgba(255,255,255,.3);margin-top:.1rem}
+.sidebar-foot{padding:.8rem 1.2rem}
+.logout-btn{width:100%;padding:.5rem;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5);border-radius:6px;font-family:var(--sans);font-size:.72rem;cursor:pointer;transition:all .2s}
+.logout-btn:hover{background:rgba(192,57,43,.2);color:#ff8a7a}
+.main{margin-left:var(--sidebar);flex:1;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:.9rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:90;box-shadow:0 1px 8px rgba(61,31,10,.06)}
+.topbar-title{font-family:var(--serif);font-size:1.2rem;font-weight:700;color:var(--brown)}
+.topbar-sub{font-size:.66rem;color:var(--muted);margin-top:.1rem}
+.page-body{padding:1.5rem}
+.page{display:none}.page.active{display:block}
+.auth-screen{position:fixed;inset:0;background:var(--soft);display:flex;align-items:center;justify-content:center;z-index:500;padding:1rem}
+.auth-box{background:#fff;border:1px solid var(--border);border-radius:10px;padding:2rem;max-width:360px;width:100%;box-shadow:0 8px 40px rgba(61,31,10,.12)}
+.auth-logo{display:flex;align-items:center;justify-content:center;gap:.6rem;margin-bottom:1.3rem}
+.auth-icon{width:44px;height:44px;background:var(--amber);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+.auth-title{font-family:var(--serif);font-size:1.4rem;color:var(--brown);text-align:center;margin-bottom:.3rem}
+.auth-sub{font-size:.74rem;color:var(--muted);text-align:center;margin-bottom:1.3rem;line-height:1.6}
+.auth-input{width:100%;padding:.65rem .9rem;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:.84rem;color:var(--text);background:var(--cream);outline:none;margin-bottom:.65rem;transition:border-color .2s}
+.auth-input:focus{border-color:var(--amber)}
+.auth-btn{width:100%;padding:.75rem;background:var(--amber);color:#fff;border:none;border-radius:28px;font-family:var(--sans);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s}
+.auth-btn:hover{background:var(--mid)}.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-link{font-size:.72rem;color:var(--amber);cursor:pointer;text-decoration:underline;text-align:center;display:block;margin-top:.7rem}
+.auth-err{font-size:.7rem;color:var(--red);text-align:center;min-height:.9rem;margin-top:.4rem}
+.auth-ok{font-size:.76rem;color:var(--green);text-align:center;padding:.6rem;background:rgba(45,106,79,.07);border-radius:6px;margin-top:.5rem;display:none}
+.pending-screen{position:fixed;inset:0;background:var(--soft);display:flex;align-items:center;justify-content:center;z-index:499;padding:1rem}
+.pending-box{background:#fff;border:1px solid var(--border);border-radius:10px;padding:2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(61,31,10,.12)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem;margin-bottom:1.5rem}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;display:flex;align-items:center;gap:.8rem}
+.stat-num{font-family:var(--serif);font-size:1.6rem;font-weight:700;color:var(--brown);line-height:1}
+.stat-label{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:.15rem}
+.stat-icon{font-size:1.5rem;opacity:.65}
+.btn{padding:.42rem .9rem;border-radius:6px;font-family:var(--sans);font-size:.72rem;cursor:pointer;transition:all .2s;border:1px solid transparent;font-weight:500}
+.btn-amber{background:var(--amber);color:#fff;border-color:var(--amber)}.btn-amber:hover{background:var(--mid)}
+.btn-outline{background:transparent;border-color:var(--border);color:var(--muted)}.btn-outline:hover{border-color:var(--amber);color:var(--amber)}
+.btn-sm{font-size:.66rem;padding:.32rem .7rem}
+.filter-bar{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
+.filter-btn{padding:.35rem .8rem;border:1px solid var(--border);border-radius:16px;font-size:.66rem;font-weight:500;color:var(--muted);cursor:pointer;background:#fff;font-family:var(--sans);transition:all .2s}
+.filter-btn.active,.filter-btn:hover{background:var(--amber);color:#fff;border-color:var(--amber)}
+.order-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;margin-bottom:.65rem;transition:all .2s}
+.order-card:hover{border-color:rgba(200,98,26,.2)}.order-card.done{opacity:.5}
+.oc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.45rem;flex-wrap:wrap;gap:.3rem}
+.oc-time{font-size:.62rem;color:var(--muted)}
+.oc-customer{font-size:.75rem;color:var(--brown);font-weight:500;margin-bottom:.2rem}
+.oc-items{font-size:.74rem;color:var(--muted);line-height:1.55}
+.oc-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.6rem;flex-wrap:wrap;gap:.4rem}
+.oc-total{font-weight:700;color:var(--amber);font-size:.85rem}
+.oc-btn{padding:.3rem .7rem;border-radius:14px;font-size:.64rem;font-weight:600;cursor:pointer;border:none;font-family:var(--sans);background:var(--green);color:#fff;transition:all .2s}
+.oc-btn:hover{background:#245a40}
+.bdg{display:inline-flex;align-items:center;font-size:.57rem;letter-spacing:.1em;text-transform:uppercase;padding:.14rem .45rem;border-radius:8px;font-weight:600}
+.bdg-del{background:rgba(200,98,26,.12);color:var(--amber)}.bdg-pku{background:rgba(45,106,79,.12);color:var(--green)}.bdg-res{background:rgba(91,141,217,.15);color:var(--blue2)}.bdg-new{background:rgba(200,98,26,.1);color:var(--amber)}.bdg-done{background:rgba(45,106,79,.1);color:var(--green2)}
+.empty-state{text-align:center;padding:2rem;font-size:.8rem;color:var(--muted);font-style:italic}
+.section-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem}
+.section-row-title{font-family:var(--serif);font-size:1.1rem;color:var(--brown);font-weight:700}
+.admin-input{width:100%;padding:.55rem .8rem;border:1px solid var(--border);border-radius:6px;font-family:var(--sans);font-size:.8rem;color:var(--text);background:var(--cream);outline:none;transition:border-color .2s;margin-bottom:.5rem}
+.admin-input:focus{border-color:var(--amber)}
+textarea.admin-input{resize:vertical}
+.cat-label{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin:.9rem 0 .5rem;font-weight:600}
+.editor-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:.6rem}
+.ec-top{display:flex;gap:.8rem;margin-bottom:.6rem}
+.ec-img{width:68px;height:68px;border-radius:6px;overflow:hidden;background:linear-gradient(135deg,var(--warm),var(--amber));display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0}
+.ec-img img{width:100%;height:100%;object-fit:cover}
+.ec-fields{flex:1;display:flex;flex-direction:column;gap:.3rem}
+.ec-row{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+.ec-actions{display:flex;justify-content:flex-end;gap:.4rem;margin-top:.4rem}
+.rev-filter-btn{padding:.3rem .7rem;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;background:#fff;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-family:var(--sans);border-radius:14px;transition:all .2s}
+.rev-filter-btn.active,.rev-filter-btn:hover{background:var(--amber);border-color:var(--amber);color:#fff}
+.admin-rev-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;margin-bottom:.65rem}
+.admin-rev-card.flagged{border-color:rgba(192,57,43,.3);background:rgba(192,57,43,.03)}
+.admin-rev-card.approved-rev{border-color:rgba(45,106,79,.2)}
+.admin-rev-actions{display:flex;gap:.4rem;margin-top:.7rem;flex-wrap:wrap}
+.mgr-btn{padding:.3rem .7rem;border-radius:14px;font-size:.64rem;font-weight:600;cursor:pointer;border:1px solid transparent;font-family:var(--sans);transition:all .2s}
+.mgr-btn.approve{background:var(--green);color:#fff;border-color:var(--green)}.mgr-btn.approve:hover{background:#245a40}
+.mgr-btn.reject{background:transparent;border-color:rgba(192,57,43,.3);color:var(--red)}.mgr-btn.reject:hover{background:rgba(192,57,43,.08)}
+.mgr-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:.9rem 1rem;margin-bottom:.55rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;border-left:3px solid var(--gold)}
+.mgr-avatar{width:34px;height:34px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;color:#fff;font-size:.85rem;flex-shrink:0}
+.notif-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem;margin-bottom:.65rem;position:relative}
+.notif-card.unread{border-color:rgba(200,98,26,.25);background:rgba(253,246,236,.6)}
+.notif-card.badge-n{border-color:rgba(232,164,53,.3);background:rgba(232,164,53,.04)}
+.notif-card.order-n{border-color:rgba(45,106,79,.2);background:rgba(45,106,79,.03)}
+.notif-card.res-n{border-color:rgba(91,141,217,.2);background:rgba(91,141,217,.03)}
+.notif-dot-ind{width:8px;height:8px;border-radius:50%;background:var(--amber);position:absolute;top:.9rem;right:.9rem}
+.notif-type{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);font-weight:600;margin-bottom:.35rem}
+.notif-body{font-size:.8rem;color:var(--brown);line-height:1.6}
+.notif-time{font-size:.6rem;color:var(--muted);margin-top:.35rem}
+.sales-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-bottom:1.5rem}
+.sales-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem}
+.sales-num{font-family:var(--serif);font-size:1.7rem;font-weight:700;color:var(--brown);margin-bottom:.2rem}
+.sales-label{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:600;background:var(--brown);color:#fff;padding:.65rem 1.2rem;border-radius:8px;font-size:.78rem;font-weight:500;box-shadow:0 4px 20px rgba(61,31,10,.25);transform:translateY(80px);opacity:0;transition:all .3s;max-width:280px}
+.toast.show{transform:none;opacity:1}
+#menuToggle{display:none}
+@media(max-width:900px){
+  #menuToggle{display:block !important}
+  .sidebar{transform:translateX(-100%);transition:transform .3s}
+  .sidebar.mob-open{transform:none}
+  .main{margin-left:0}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .sales-grid{grid-template-columns:1fr 1fr}
+  .ec-row{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .sidebar{width:80vw;max-width:260px}
+  .stats-grid{grid-template-columns:1fr 1fr;gap:.6rem}
+  .stat-card{padding:.8rem .9rem}
+  .stat-num{font-size:1.35rem}
+  .sales-grid{grid-template-columns:1fr}
+  .page-body{padding:1rem}
+  .ec-row{grid-template-columns:1fr}
+  .filter-bar{gap:.3rem}
+  .filter-btn{font-size:.6rem;padding:.28rem .55rem}
+  .mgr-card{flex-direction:column;align-items:flex-start}
+  .section-row{flex-direction:column;align-items:flex-start}
+  .auth-box{padding:1.5rem 1.2rem}
+  .pending-box{padding:1.5rem 1.2rem}
+}
+</style>
+</head>
+<body>
+
+<!-- SIGNUP -->
+<div class="auth-screen" id="signupScreen">
+  <div class="auth-box">
+    <div class="auth-logo"><div class="auth-icon">🥪</div><div><div style="font-family:var(--serif);font-size:1.1rem;font-weight:700;color:var(--brown)">Nodens Manager</div><div style="font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)">Portal</div></div></div>
+    <div class="auth-title">Create Account</div>
+    <div class="auth-sub">Sign up to manage Nodens Sandwich Shop. Your account requires Admin approval.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+      <input class="auth-input" id="suFirst" placeholder="First name" style="margin:0"/>
+      <input class="auth-input" id="suLast" placeholder="Last name" style="margin:0"/>
+    </div>
+    <div style="height:.5rem"></div>
+    <input class="auth-input" id="suEmail" type="email" placeholder="Email address"/>
+    <input class="auth-input" id="suPw" type="password" placeholder="Password (min 8 chars)"/>
+    <input class="auth-input" id="suPw2" type="password" placeholder="Confirm password"/>
+    <button class="auth-btn" id="signupBtn" onclick="doSignup()">Create Account →</button>
+    <div class="auth-err" id="signupErr"></div>
+    <span class="auth-link" onclick="showScreen('login')">Already have an account? Sign in</span>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="auth-screen" id="loginScreen" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo"><div class="auth-icon">🥪</div><div><div style="font-family:var(--serif);font-size:1.1rem;font-weight:700;color:var(--brown)">Nodens Manager</div><div style="font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)">Portal</div></div></div>
+    <div class="auth-title">Welcome Back</div>
+    <div class="auth-sub">Sign in to your manager account</div>
+    <input class="auth-input" id="liEmail" type="email" placeholder="Email address"/>
+    <input class="auth-input" id="liPw" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="auth-btn" id="loginBtn" onclick="doLogin()">Sign In →</button>
+    <div class="auth-err" id="loginErr"></div>
+    <span class="auth-link" onclick="showScreen('forgot')">Forgot password?</span>
+    <span class="auth-link" onclick="showScreen('signup')">Don't have an account? Sign up</span>
+  </div>
+</div>
+
+<!-- FORGOT -->
+<div class="auth-screen" id="forgotScreen" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo"><div class="auth-icon">🔑</div></div>
+    <div class="auth-title">Reset Password</div>
+    <div class="auth-sub">Enter your email to receive a reset link.</div>
+    <input class="auth-input" id="fpEmail" type="email" placeholder="Your email address"/>
+    <button class="auth-btn" onclick="doForgotPw()">Send Reset Link →</button>
+    <div class="auth-err" id="forgotErr"></div>
+    <div class="auth-ok" id="forgotOk">Reset link sent! Check your email.</div>
+    <span class="auth-link" onclick="showScreen('login')">Back to Sign In</span>
+  </div>
+</div>
+
+<!-- SET NEW PASSWORD -->
+<div class="auth-screen" id="newPwScreen" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo"><div class="auth-icon">🔐</div></div>
+    <div class="auth-title">Set New Password</div>
+    <div class="auth-sub">Enter and confirm your new password.</div>
+    <input class="auth-input" id="np1" type="password" placeholder="New password"/>
+    <input class="auth-input" id="np2" type="password" placeholder="Confirm password"/>
+    <button class="auth-btn" onclick="doSetNewPw()">Update Password →</button>
+    <div class="auth-err" id="newPwErr"></div>
+  </div>
+</div>
+
+<!-- PENDING -->
+<div class="pending-screen" id="pendingScreen" style="display:none">
+  <div class="pending-box">
+    <div style="font-size:3rem;margin-bottom:.8rem">⏳</div>
+    <div style="font-family:var(--serif);font-size:1.4rem;color:var(--brown);margin-bottom:.5rem">Awaiting Approval</div>
+    <div style="font-size:.8rem;color:var(--muted);line-height:1.75;margin-bottom:1.5rem">Your account has been created and is pending Admin approval. You will gain access once approved.<br/><br/>If you've been approved, tap below to check.</div>
+    <button class="auth-btn" onclick="checkApproval()" style="width:auto;padding:.6rem 1.4rem;font-size:.82rem">🔄 Check Status</button>
+    <div style="margin-top:.8rem"><button class="btn btn-outline btn-sm" onclick="doLogout()">Sign Out</button></div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-main">🥪 Nodens</div>
+    <div class="sidebar-logo-sub">Manager Portal</div>
+    <div id="badgePill"></div>
+  </div>
+  <div class="sidebar-user" id="sidebarUser">
+    <div class="su-name" id="suName">Manager</div>
+    <div class="su-email" id="suEmail2"></div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</button>
+    <button class="nav-item" onclick="showPage('orders',this)"><span class="nav-icon">🛵</span>Orders &amp; Reservations<span class="nav-badge" id="ordBadge" style="display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('menu',this)"><span class="nav-icon">📋</span>Menu Editor</button>
+    <button class="nav-item" onclick="showPage('reviews',this)"><span class="nav-icon">⭐</span>Reviews<span class="nav-badge" id="revBadge" style="display:none">0</span></button>
+    <button class="nav-item" id="navSuperMgr" style="display:none" onclick="showPage('supermgr',this)"><span class="nav-icon">👥</span>Approve Managers<span class="nav-badge" id="mgrBadge" style="display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('notifs',this)"><span class="nav-icon">🔔</span>Notifications<span class="nav-badge" id="notifBadge" style="display:none">0</span></button>
+    <button class="nav-item" onclick="showPage('sales',this)"><span class="nav-icon">💰</span>Daily Sales</button>
+  </nav>
+  <div class="sidebar-foot">
+    <button class="logout-btn" onclick="doLogout()">Log Out</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="mainArea" style="display:none">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:.7rem">
+      <button id="menuToggle" style="background:none;border:none;cursor:pointer;font-size:1.3rem;color:var(--brown);padding:.2rem">☰</button>
+      <div><div class="topbar-title" id="tbarTitle">Dashboard</div><div class="topbar-sub">Nodens Sandwich Shop</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.6rem">
+      <button class="btn btn-outline btn-sm" onclick="loadAll()">🔄 Refresh</button>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🍜</div><div><div class="stat-num" id="dOrd">0</div><div class="stat-label">Orders</div></div></div>
+        <div class="stat-card"><div class="stat-icon">📅</div><div><div class="stat-num" id="dRes">0</div><div class="stat-label">Reservations</div></div></div>
+        <div class="stat-card"><div class="stat-icon">⏳</div><div><div class="stat-num" id="dPend">0</div><div class="stat-label">Pending</div></div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div><div class="stat-num" id="dDone">0</div><div class="stat-label">Completed</div></div></div>
+      </div>
+      <div class="section-row"><div class="section-row-title">Recent Activity</div><button class="btn btn-outline btn-sm" onclick="showPage('orders',document.querySelector('[onclick*=orders]'))">View All →</button></div>
+      <div id="recentAct"></div>
+    </div>
+
+    <div class="page" id="page-orders">
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setOrdFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setOrdFilter('order',this)">🍜 Orders</button>
+        <button class="filter-btn" onclick="setOrdFilter('reservation',this)">📅 Reservations</button>
+        <button class="filter-btn" onclick="setOrdFilter('Delivery',this)">🛵 Delivery</button>
+        <button class="filter-btn" onclick="setOrdFilter('Pickup',this)">🥡 Pickup</button>
+        <button class="filter-btn" onclick="setOrdFilter('new',this)">⏳ Pending</button>
+        <button class="filter-btn" onclick="setOrdFilter('completed',this)">✅ Done</button>
+      </div>
+      <div id="ordList"></div>
+    </div>
+
+    <div class="page" id="page-menu">
+      <div class="section-row" style="margin-bottom:1rem"><div class="section-row-title">Menu Editor</div><button class="btn btn-amber btn-sm" onclick="saveMenu()">💾 Save</button></div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1rem">
+        <div style="font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin-bottom:.6rem;font-weight:600">Add New Item</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+          <input class="admin-input" id="niName" placeholder="Item name *" style="margin:0"/>
+          <input class="admin-input" id="niPrice" placeholder="Price e.g. From £3.50" style="margin:0"/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+          <select class="admin-input" id="niCat" style="margin:0"><option value="batch">Batch</option><option value="baguette">Baguette</option><option value="salad">Salad Box</option><option value="jacket">Jacket Potato</option><option value="pies">Pies</option><option value="toasties">Toasties</option><option value="hotfood">Hot Food</option><option value="specials">Specials</option><option value="meatballs">Meatballs</option><option value="corned">Corned Beef</option><option value="cakes">Cakes</option><option value="drinks">Drinks</option></select>
+          <input class="admin-input" id="niTag" placeholder="Tag e.g. Popular" style="margin:0"/>
+        </div>
+        <textarea class="admin-input" id="niDesc" rows="2" placeholder="Description..." style="margin:0 0 .5rem"></textarea>
+        <button class="btn btn-amber btn-sm" onclick="addItem()">+ Add Item</button>
+      </div>
+      <div id="menuEds"></div>
+    </div>
+
+    <div class="page" id="page-reviews">
+      <div class="section-row" style="margin-bottom:1rem"><div class="section-row-title">Customer Reviews</div><button class="btn btn-outline btn-sm" onclick="loadRevs()">🔄 Refresh</button></div>
+      <div class="filter-bar" style="margin-bottom:1rem">
+        <button class="rev-filter-btn active" onclick="setRevFilter('all',this)">All</button>
+        <button class="rev-filter-btn" onclick="setRevFilter('pending',this)">⏳ Pending</button>
+        <button class="rev-filter-btn" onclick="setRevFilter('approved',this)">✅ Approved</button>
+        <button class="rev-filter-btn" onclick="setRevFilter('hidden',this)">🚫 Hidden</button>
+        <button class="rev-filter-btn" onclick="setRevFilter('flagged',this)">⚠️ Flagged</button>
+        <button class="rev-filter-btn" onclick="setRevFilter('low',this)">⭐ 1-2 Stars</button>
+      </div>
+      <div id="revList"><div class="empty-state">Loading...</div></div>
+    </div>
+
+    <div class="page" id="page-supermgr">
+      <div class="section-row" style="margin-bottom:1rem"><div class="section-row-title">Approve Managers</div><button class="btn btn-outline btn-sm" onclick="loadSuperMgrs()">🔄 Refresh</button></div>
+      <div id="superMgrList"><div class="empty-state">Loading...</div></div>
+    </div>
+
+    <div class="page" id="page-notifs">
+      <div class="section-row" style="margin-bottom:1rem"><div class="section-row-title">Notifications</div><button class="btn btn-outline btn-sm" onclick="loadNotifs()">🔄 Refresh</button></div>
+      <div id="notifList"><div class="empty-state">Loading...</div></div>
+    </div>
+
+    <div class="page" id="page-sales">
+      <div class="section-row" style="margin-bottom:1rem"><div class="section-row-title">Daily Sales</div><button class="btn btn-outline btn-sm" onclick="renderSales()">🔄 Refresh</button></div>
+      <div class="sales-grid">
+        <div class="sales-card"><div class="sales-num" id="salRev">£0.00</div><div class="sales-label">Today's Revenue</div></div>
+        <div class="sales-card"><div class="sales-num" id="salOrd">0</div><div class="sales-label">Orders Today</div></div>
+        <div class="sales-card"><div class="sales-num" id="salAvg">£0.00</div><div class="sales-label">Avg Order</div></div>
+      </div>
+      <div id="salList"></div>
+    </div>
+
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SB_URL  = 'https://qouvhinxgbqcqicrnvsu.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvdXZoaW54Z2JxY3FpY3JudnN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMjg1MjksImV4cCI6MjA4ODkwNDUyOX0.YXWJj1Px4_QEPDETNDt2ACbbv-lkfFEK-h_WVehDF7s';
+const SITE_URL = window.location.origin + window.location.pathname;
+const LSKEY    = 'nodens_mgr_menu';
+
+const catNames = {batch:'Batch',baguette:'Baguette',salad:'Salad Box',jacket:'Jacket Potato',pies:'Pies',toasties:'Toasties',hotfood:'Hot Food',specials:'Specials',meatballs:'Meatballs',corned:'Corned Beef',cakes:'Cakes',drinks:'Drinks'};
+const BAD_WORDS = ['stupid','idiot','hate','terrible','awful','disgusting','horrible','worst','crap','trash','garbage','nasty','rude','filthy'];
+
+let user=null, token=null, mgrRow=null, allOrders=[], allRevs=[], menuData={};
+let ordFilter='all', revFilter='all';
+
+const defaultMenu = {
+  batch:[{id:1,emoji:'🥯',name:'Bacon Batch',desc:'Crispy bacon in a soft batch.',price:'From £2.80',tag:'Breakfast'}],
+  baguette:[{id:10,emoji:'🥖',name:'Tuna Mayo Baguette',desc:'Creamy tuna mayo baguette.',price:'From £3.50',tag:'Popular'}],
+  salad:[{id:20,emoji:'🥗',name:'Chicken Caesar Box',desc:'Grilled chicken Caesar salad.',price:'From £4.50',tag:'Healthy'}],
+  jacket:[{id:30,emoji:'🥔',name:'Tuna Mayo Jacket',desc:'Hot jacket with tuna mayo.',price:'From £4.20',tag:'Hot'}],
+  pies:[{id:40,emoji:'🥧',name:'Steak & Kidney Pie',desc:'Traditional steak and kidney pie.',price:'From £3.20',tag:'Classic'}],
+  toasties:[{id:50,emoji:'🫓',name:'Cheese & Ham Toastie',desc:'Ham and melted cheddar toastie.',price:'From £3.50',tag:'Popular'}],
+  hotfood:[{id:60,emoji:'🍳',name:'Full English',desc:'Bacon, sausage, eggs and toast.',price:'From £5.50',tag:'Favourite'}],
+  specials:[{id:70,emoji:'⭐',name:'Daily Special',desc:"Today's special — ask at counter.",price:'Ask In Store',tag:'Daily'}],
+  meatballs:[{id:80,emoji:'🍝',name:'Spicy Meatball Sub',desc:'Meatballs in rich tomato sauce.',price:'From £4.50',tag:'Spicy'}],
+  corned:[{id:90,emoji:'🥩',name:'Corned Beef Sandwich',desc:'Classic corned beef on bread.',price:'From £3.00',tag:'Classic'}],
+  cakes:[{id:100,emoji:'🎂',name:'Victoria Sponge',desc:'Jam and cream sponge cake.',price:'From £2.20',tag:''}],
+  drinks:[{id:110,emoji:'☕',name:'Americano',desc:'Rich espresso coffee.',price:'From £2.00',tag:''}]
+};
+
+// AUTH HELPERS
+function showScreen(name){
+  ['signupScreen','loginScreen','forgotScreen','newPwScreen','pendingScreen'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById(name+'Screen').style.display='flex';
+}
+function showLogin(){showScreen('login');}
+function showSignup(){showScreen('signup');}
+
+function checkResetHash(){
+  const hash=window.location.hash;
+  if(!hash.includes('access_token'))return false;
+  const p=new URLSearchParams(hash.substring(1));
+  const t=p.get('access_token'),type=p.get('type');
+  if(t&&type==='recovery'){token=t;showScreen('newPw');return true;}
+  return false;
+}
+
+async function sbPost(path,body,tok){
+  const r=await fetch(SB_URL+path,{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY,...(tok?{Authorization:'Bearer '+tok}:{})},body:JSON.stringify(body)});
+  return r.json();
+}
+async function sbGet(table,params,tok){
+  const r=await fetch(`${SB_URL}/rest/v1/${table}?${params||''}&order=created_at.desc`,{headers:{apikey:SB_KEY,Authorization:'Bearer '+(tok||SB_KEY)}});
+  return r.ok?r.json():[];
+}
+async function sbPatch(table,id,body,tok){
+  return fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`,{method:'PATCH',headers:{apikey:SB_KEY,Authorization:'Bearer '+(tok||SB_KEY),'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body)});
+}
+async function sbInsert(table,body,tok){
+  return fetch(`${SB_URL}/rest/v1/${table}`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+(tok||SB_KEY),'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body)});
+}
+async function kvGet(key,tok){
+  const r=await fetch(`${SB_URL}/rest/v1/nodens_settings?key=eq.${encodeURIComponent(key)}&select=*`,{headers:{apikey:SB_KEY,Authorization:'Bearer '+(tok||SB_KEY)}});
+  const rows=r.ok?await r.json():[];return rows[0]?JSON.parse(rows[0].value):null;
+}
+
+// SIGN UP
+async function doSignup(){
+  const first=document.getElementById('suFirst').value.trim();
+  const last=document.getElementById('suLast').value.trim();
+  const email=document.getElementById('suEmail').value.trim();
+  const pw=document.getElementById('suPw').value;
+  const pw2=document.getElementById('suPw2').value;
+  const err=document.getElementById('signupErr');
+  if(!first||!last){err.textContent='Please enter your name.';return;}
+  if(!email){err.textContent='Please enter your email.';return;}
+  if(pw.length<8){err.textContent='Password must be at least 8 characters.';return;}
+  if(pw!==pw2){err.textContent='Passwords do not match.';return;}
+  err.textContent='';
+  const btn=document.getElementById('signupBtn');btn.textContent='Creating...';btn.disabled=true;
+  const res=await sbPost('/auth/v1/signup',{email,password:pw,data:{first_name:first,last_name:last}});
+  if(res.user||res.id){
+    const uid=res.user?.id||res.id;
+    await sbInsert('nodens_managers',{user_id:uid,first_name:first,last_name:last,email,status:'pending'});
+    showScreen('pending');
+  }else{err.textContent=res.msg||res.error_description||'Signup failed. Try again.';}
+  btn.textContent='Create Account →';btn.disabled=false;
+}
+
+// LOGIN
+async function doLogin(){
+  const email=document.getElementById('liEmail').value.trim();
+  const pw=document.getElementById('liPw').value;
+  const err=document.getElementById('loginErr');
+  if(!email||!pw){err.textContent='Please enter email and password.';return;}
+  err.textContent='';
+  const btn=document.getElementById('loginBtn');btn.textContent='Signing in...';btn.disabled=true;
+  const res=await sbPost('/auth/v1/token?grant_type=password',{email,password:pw});
+  if(res.access_token){
+    token=res.access_token;
+    user={id:res.user.id,email:res.user.email,...(res.user.user_metadata||{})};
+    await loadMgrRow();
+  }else{err.textContent=res.error_description||res.msg||'Invalid email or password.';}
+  btn.textContent='Sign In →';btn.disabled=false;
+}
+
+async function loadMgrRow(){
+  const rows=await sbGet('nodens_managers',`email=eq.${encodeURIComponent(user.email)}&select=*`,token);
+  mgrRow=Array.isArray(rows)?rows[0]:null;
+  if(!mgrRow||mgrRow.status==='pending'){showScreen('pending');return;}
+  if(mgrRow.status==='rejected'){document.getElementById('loginErr').textContent='Your access request was not approved.';showScreen('login');return;}
+  launchDashboard();
+}
+
+async function checkApproval(){if(!token||!user){showScreen('login');return;}await loadMgrRow();}
+
+function launchDashboard(){
+  document.getElementById('mainArea').style.display='block';
+  const name=[mgrRow?.first_name,mgrRow?.last_name].filter(Boolean).join(' ')||user?.email||'Manager';
+  document.getElementById('suName').textContent=name;
+  document.getElementById('suEmail2').textContent=user?.email||'';
+  applyBadge(mgrRow?.badge);
+  menuData=JSON.parse(localStorage.getItem(LSKEY)||JSON.stringify(defaultMenu));
+  loadAll();
+  loadNotifs();
+  setInterval(loadAll,30000);
+}
+
+function applyBadge(badge){
+  const el=document.getElementById('badgePill');
+  const map={super_admin:['bp-super','⭐ Super Admin'],moderator:['bp-moderator','🛡 Moderator'],manager:['bp-manager','👔 Manager'],viewer:['bp-viewer','👁 Viewer']};
+  if(badge){const[cls,label]=map[badge]||['bp-custom','🏷 '+badge];el.className='badge-pill '+cls;el.textContent=label;el.style.display='inline-flex';}
+  else el.style.display='none';
+  document.getElementById('navSuperMgr').style.display=badge==='super_admin'?'flex':'none';
+}
+
+async function doForgotPw(){
+  const email=document.getElementById('fpEmail').value.trim();
+  const err=document.getElementById('forgotErr');
+  if(!email){err.textContent='Please enter your email.';return;}
+  await fetch(SB_URL+'/auth/v1/recover',{method:'POST',headers:{'Content-Type':'application/json',apikey:SB_KEY},body:JSON.stringify({email,options:{redirectTo:SITE_URL}})});
+  err.textContent='';document.getElementById('forgotOk').style.display='block';
+}
+
+async function doSetNewPw(){
+  const pw=document.getElementById('np1').value;
+  const pw2=document.getElementById('np2').value;
+  const err=document.getElementById('newPwErr');
+  if(pw.length<8){err.textContent='Password must be at least 8 characters.';return;}
+  if(pw!==pw2){err.textContent='Passwords do not match.';return;}
+  const res=await fetch(SB_URL+'/auth/v1/user',{method:'PUT',headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+token},body:JSON.stringify({password:pw})});
+  const data=await res.json();
+  if(data.id||data.email){showScreen('login');toast('Password updated! Please sign in.');}
+  else err.textContent='Failed. Please try again.';
+}
+
+function doLogout(){user=null;token=null;mgrRow=null;document.getElementById('mainArea').style.display='none';showScreen('login');}
+
+// PAGES
+const pageTitles={dashboard:'Dashboard',orders:'Orders & Reservations',menu:'Menu Editor',reviews:'Customer Reviews',supermgr:'Approve Managers',notifs:'Notifications',sales:'Daily Sales'};
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  document.getElementById('tbarTitle').textContent=pageTitles[id]||id;
+  if(id==='orders')renderOrds();
+  if(id==='menu')renderMenu();
+  if(id==='reviews')loadRevs();
+  if(id==='supermgr')loadSuperMgrs();
+  if(id==='notifs')loadNotifs();
+  if(id==='sales')renderSales();
+}
+
+// DATA LOAD
+async function loadAll(){
+  try{
+    allOrders=await sbGet('nodens_orders','',token)||[];
+    const pend=allOrders.filter(o=>o.status==='new'&&(o.kind==='order'||o.kind==='reservation')).length;
+    const ob=document.getElementById('ordBadge');if(ob){ob.textContent=pend;ob.style.display=pend>0?'inline':'none';}
+    document.getElementById('dOrd').textContent=allOrders.filter(o=>o.kind==='order').length;
+    document.getElementById('dRes').textContent=allOrders.filter(o=>o.kind==='reservation').length;
+    document.getElementById('dPend').textContent=allOrders.filter(o=>o.status==='new').length;
+    document.getElementById('dDone').textContent=allOrders.filter(o=>o.status==='completed').length;
+    renderRecent();
+    try{const cloud=await kvGet('siteData',token);if(cloud?.menuItems){menuData=cloud.menuItems;localStorage.setItem(LSKEY,JSON.stringify(menuData));}}catch(e){}
+  }catch(e){}
+}
+
+function ta(d){const s=Math.floor((Date.now()-new Date(d))/1000);if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+function pp(s){const m=(s||'').match(/[\d.]+/);return m?parseFloat(m[0]):0;}
+function isToday(d){const x=new Date(d),t=new Date();return x.getDate()===t.getDate()&&x.getMonth()===t.getMonth()&&x.getFullYear()===t.getFullYear();}
+
+function ordCard(o){
+  const isRes=o.kind==='reservation';
+  const typeCls=isRes?'bdg-res':o.order_type==='Pickup'?'bdg-pku':'bdg-del';
+  const statCls=o.status==='completed'?'bdg-done':'bdg-new';
+  const t=o.created_at?new Date(o.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' · '+new Date(o.created_at).toLocaleDateString([],{month:'short',day:'numeric'}):'';
+  return `<div class="order-card ${o.status==='completed'?'done':''}">
+    <div class="oc-top"><div style="display:flex;gap:.4rem;flex-wrap:wrap"><span class="bdg ${typeCls}">${isRes?'📅 Reservation':'🛵 '+(o.order_type||'Order')}</span><span class="bdg ${statCls}">${o.status==='completed'?'✅ Done':'⏳ Pending'}</span></div><div class="oc-time">${t}</div></div>
+    ${o.customer_name?`<div class="oc-customer">👤 ${o.customer_name}${o.customer_phone?' · 📞 '+o.customer_phone:''}</div>`:''}
+    ${o.customer_address?`<div class="oc-items" style="font-size:.7rem">📍 ${o.customer_address}</div>`:''}
+    <div class="oc-items">${o.items||''}</div>
+    <div class="oc-foot"><div class="oc-total">${o.total||''}</div>${o.status!=='completed'?`<button class="oc-btn" onclick="doneOrder(${o.id})">${isRes?'✅ Confirm':'✅ Done'}</button>`:''}</div>
+  </div>`;
+}
+
+function renderRecent(){const el=document.getElementById('recentAct');if(!el)return;const r=allOrders.filter(o=>o.kind!=='badge_assigned').slice(0,5);el.innerHTML=r.length?r.map(ordCard).join(''):'<div class="empty-state">No activity yet.</div>';}
+
+function setOrdFilter(f,btn){ordFilter=f;document.querySelectorAll('#page-orders .filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderOrds();}
+function renderOrds(){
+  const el=document.getElementById('ordList');if(!el)return;
+  let list=allOrders.filter(o=>o.kind!=='badge_assigned');
+  if(ordFilter==='order')list=list.filter(o=>o.kind==='order');
+  else if(ordFilter==='reservation')list=list.filter(o=>o.kind==='reservation');
+  else if(ordFilter==='Delivery')list=list.filter(o=>o.order_type==='Delivery');
+  else if(ordFilter==='Pickup')list=list.filter(o=>o.order_type==='Pickup');
+  else if(ordFilter==='new')list=list.filter(o=>o.status==='new');
+  else if(ordFilter==='completed')list=list.filter(o=>o.status==='completed');
+  el.innerHTML=list.length?list.map(ordCard).join(''):'<div class="empty-state">No orders found.</div>';
+}
+async function doneOrder(id){await sbPatch('nodens_orders',id,{status:'completed'},token);await loadAll();toast('Marked done ✓');}
+
+// MENU
+function renderMenu(){
+  const el=document.getElementById('menuEds');if(!el)return;
+  el.innerHTML=Object.entries(menuData).map(([cat,items])=>`<div style="margin-bottom:1.2rem"><div class="cat-label">${catNames[cat]||cat}</div>${items.map(item=>`<div class="editor-card"><div class="ec-top"><div class="ec-img">${item.img?`<img src="${item.img}" alt=""/>`:item.emoji||'🍽️'}</div><div class="ec-fields"><input class="admin-input" value="${item.name||''}" onchange="upItem(${item.id},'${cat}','name',this.value)" style="margin:0 0 .3rem"/><div class="ec-row"><input class="admin-input" value="${item.price||''}" onchange="upItem(${item.id},'${cat}','price',this.value)" style="margin:0" placeholder="Price"/><input class="admin-input" value="${item.tag||''}" onchange="upItem(${item.id},'${cat}','tag',this.value)" style="margin:0" placeholder="Tag"/></div></div></div><input class="admin-input" value="${item.desc||''}" onchange="upItem(${item.id},'${cat}','desc',this.value)" placeholder="Description" style="margin-bottom:.4rem"/><div class="ec-actions"><button class="btn btn-sm" style="color:var(--red);border:1px solid rgba(192,57,43,.2);background:transparent" onclick="delItem(${item.id},'${cat}')">✕ Remove</button><button class="btn btn-amber btn-sm" onclick="saveMenu()">Save</button></div></div>`).join('')}</div>`).join('');
+}
+function upItem(id,cat,field,val){const item=menuData[cat]?.find(x=>x.id===id);if(item)item[field]=val;}
+async function saveMenu(){
+  localStorage.setItem(LSKEY,JSON.stringify(menuData));
+  try{const cloud=await kvGet('siteData',token)||{};cloud.menuItems=menuData;
+    await fetch(`${SB_URL}/rest/v1/nodens_settings`,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+(token||SB_KEY),'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({key:'siteData',value:JSON.stringify(cloud)})});
+    toast('Menu saved ✓');}catch(e){toast('Saved locally ✓');}
+}
+function delItem(id,cat){if(!confirm('Remove this item?'))return;menuData[cat]=menuData[cat].filter(x=>x.id!==id);localStorage.setItem(LSKEY,JSON.stringify(menuData));renderMenu();}
+function addItem(){
+  const name=document.getElementById('niName').value.trim();
+  const price=document.getElementById('niPrice').value.trim();
+  const desc=document.getElementById('niDesc').value.trim();
+  const cat=document.getElementById('niCat').value;
+  const tag=document.getElementById('niTag').value.trim();
+  if(!name){toast('Enter item name');return;}
+  if(!menuData[cat])menuData[cat]=[];
+  menuData[cat].push({id:Date.now(),name,desc:desc||'Fresh and delicious.',price:price||'Ask in store',tag,emoji:'🍽️',img:''});
+  localStorage.setItem(LSKEY,JSON.stringify(menuData));renderMenu();
+  ['niName','niPrice','niDesc','niTag'].forEach(x=>document.getElementById(x).value='');
+  toast(name+' added ✓');
+}
+
+// REVIEWS
+function isFlagged(t){const l=(t||'').toLowerCase();return BAD_WORDS.some(w=>l.includes(w));}
+async function loadRevs(){
+  const el=document.getElementById('revList');if(!el)return;
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/nodens_reviews?order=created_at.desc',{headers:{apikey:SB_KEY,Authorization:'Bearer '+(token||SB_KEY)}});
+    allRevs=await r.json()||[];
+    for(const rv of allRevs){if(rv.status==='pending'&&isFlagged(rv.body)){await patchRev(rv.id,'flagged');rv.status='flagged';}}
+    const pend=allRevs.filter(r=>r.status==='pending'||r.status==='flagged').length;
+    const rb=document.getElementById('revBadge');if(rb){rb.textContent=pend;rb.style.display=pend>0?'inline':'none';}
+    renderRevs();
+  }catch(e){el.innerHTML='<div class="empty-state">Could not load reviews.</div>';}
+}
+function setRevFilter(f,btn){revFilter=f;document.querySelectorAll('.rev-filter-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderRevs();}
+function renderRevs(){
+  const el=document.getElementById('revList');if(!el)return;
+  let revs=allRevs;
+  if(revFilter==='pending')revs=revs.filter(r=>r.status==='pending');
+  else if(revFilter==='approved')revs=revs.filter(r=>r.status==='approved');
+  else if(revFilter==='hidden')revs=revs.filter(r=>r.status==='hidden');
+  else if(revFilter==='flagged')revs=revs.filter(r=>r.status==='flagged');
+  else if(revFilter==='low')revs=revs.filter(r=>r.stars<=2);
+  if(!revs.length){el.innerHTML='<div class="empty-state">No reviews found.</div>';return;}
+  const isMod=mgrRow?.badge==='moderator'||mgrRow?.badge==='super_admin';
+  const isViewer=mgrRow?.badge==='viewer';
+  el.innerHTML=revs.map(rv=>{
+    const flagged=rv.status==='flagged'||isFlagged(rv.body);
+    const approved=rv.status==='approved';
+    const hidden=rv.status==='hidden';
+    const stars='★'.repeat(rv.stars||0)+'☆'.repeat(5-(rv.stars||0));
+    const acts=isViewer?'<span style="font-size:.68rem;color:var(--muted);font-style:italic">Read-only</span>'
+      :`${!approved?`<button class="mgr-btn approve" onclick="setRev(${rv.id},'approved')">✅ Approve</button>`:''}
+       ${approved?`<button class="mgr-btn reject" onclick="setRev(${rv.id},'hidden')">🚫 Hide</button>`:''}
+       ${hidden?`<button class="mgr-btn approve" onclick="setRev(${rv.id},'approved')">↩ Restore</button>`:''}
+       ${flagged&&!hidden?`<button class="mgr-btn approve" onclick="setRev(${rv.id},'approved')">✅ Approve Anyway</button>`:''}
+       ${isMod?`<button class="mgr-btn reject" onclick="delRev(${rv.id})">🗑 Delete</button>`:''}`;
+    return `<div class="admin-rev-card ${flagged?'flagged':''} ${approved?'approved-rev':''}" ${hidden?'style="opacity:.45"':''}>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.4rem">
+        <div><span style="font-family:var(--serif);font-size:.92rem;color:var(--brown)">${rv.reviewer_name}</span><span style="font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-left:.5rem">${rv.category}</span>${flagged?'<span style="font-size:.55rem;background:rgba(192,57,43,.1);color:var(--red);padding:.15rem .4rem;margin-left:.4rem;border-radius:4px">⚠️ Flagged</span>':''}</div>
+        <div style="text-align:right"><div style="color:var(--gold);font-size:.82rem">${stars}</div><div style="font-size:.57rem;color:var(--muted)">${ta(rv.created_at)}</div></div>
+      </div>
+      <div style="font-size:.76rem;color:var(--muted);margin-top:.5rem;line-height:1.65;font-style:italic">"${rv.body}"</div>
+      <div class="admin-rev-actions">${acts}</div>
+    </div>`;
+  }).join('');
+}
+async function patchRev(id,status){await fetch(SB_URL+'/rest/v1/nodens_reviews?id=eq.'+id,{method:'PATCH',headers:{apikey:SB_KEY,Authorization:'Bearer '+(token||SB_KEY),'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({status})});}
+async function setRev(id,status){await patchRev(id,status);loadRevs();}
+async function delRev(id){if(!confirm('Delete?'))return;await fetch(SB_URL+'/rest/v1/nodens_reviews?id=eq.'+id,{method:'DELETE',headers:{apikey:SB_KEY,Authorization:'Bearer '+(token||SB_KEY)}});loadRevs();}
+
+// SUPER MGR
+async function loadSuperMgrs(){
+  const el=document.getElementById('superMgrList');if(!el)return;
+  try{
+    const rows=await sbGet('nodens_managers','status=eq.pending&select=*',token);
+    const mb=document.getElementById('mgrBadge');if(mb){mb.textContent=rows.length;mb.style.display=rows.length>0?'inline':'none';}
+    if(!rows.length){el.innerHTML='<div class="empty-state">No pending requests.</div>';return;}
+    el.innerHTML=rows.map(m=>{
+      const name=[m.first_name,m.last_name].filter(Boolean).join(' ')||m.email||'Unknown';
+      const init=(m.first_name?.[0]||m.email?.[0]||'M').toUpperCase();
+      const date=m.created_at?new Date(m.created_at).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}):'';
+      return `<div class="mgr-card"><div style="display:flex;align-items:center;gap:.7rem;flex:1"><div class="mgr-avatar">${init}</div><div><div style="font-size:.8rem;font-weight:600;color:var(--brown)">${name}</div><div style="font-size:.66rem;color:var(--muted)">${m.email||'—'}</div><div style="font-size:.6rem;color:rgba(61,31,10,.35)">Requested: ${date}</div></div></div><div style="display:flex;gap:.4rem"><button class="mgr-btn approve" onclick="approveMgr(${m.id},'${name}')">✅ Approve</button><button class="mgr-btn reject" onclick="rejectMgr(${m.id},'${name}')">✕ Reject</button></div></div>`;
+    }).join('');
+  }catch(e){if(el)el.innerHTML='<div class="empty-state">Could not load.</div>';}
+}
+async function approveMgr(id,name){if(!confirm('Approve '+name+'?'))return;await sbPatch('nodens_managers',id,{status:'approved'},token);toast(name+' approved ✓');loadSuperMgrs();}
+async function rejectMgr(id,name){if(!confirm('Reject '+name+'?'))return;await sbPatch('nodens_managers',id,{status:'rejected'},token);toast(name+' rejected');loadSuperMgrs();}
+
+// NOTIFICATIONS
+async function loadNotifs(){
+  const el=document.getElementById('notifList');if(!el)return;
+  if(!user)return;
+  try{
+    const badgeNotifs=await sbGet('nodens_orders','kind=eq.badge_assigned',token)||[];
+    const mgrName=[mgrRow?.first_name,mgrRow?.last_name].filter(Boolean).join(' ');
+    const myBadge=badgeNotifs.filter(n=>n.customer_name===mgrName||n.customer_phone===user?.id);
+    const orderNotifs=allOrders.filter(o=>o.kind==='order'||o.kind==='reservation').slice(0,10);
+    const unread=myBadge.filter(n=>n.status==='new').length;
+    const nb=document.getElementById('notifBadge');if(nb){nb.textContent=unread;nb.style.display=unread>0?'inline':'none';}
+    if(!myBadge.length&&!orderNotifs.length){el.innerHTML='<div class="empty-state">No notifications yet.</div>';return;}
+    el.innerHTML=[
+      ...myBadge.map(n=>`<div class="notif-card badge-n ${n.status==='new'?'unread':''}">
+        ${n.status==='new'?'<div class="notif-dot-ind"></div>':''}
+        <div class="notif-type">🏷️ Badge Notification</div>
+        <div class="notif-body">${n.items||''}</div>
+        <div class="notif-time">${ta(n.created_at)}</div>
+      </div>`),
+      ...orderNotifs.map(o=>`<div class="notif-card ${o.kind==='reservation'?'res-n':'order-n'} ${o.status==='new'?'unread':''}">
+        ${o.status==='new'?'<div class="notif-dot-ind"></div>':''}
+        <div class="notif-type">${o.kind==='reservation'?'📅 New Reservation':'🍜 New Order'} — ${o.order_type||''}</div>
+        <div class="notif-body">${o.customer_name?'👤 '+o.customer_name+' &nbsp;':''} ${o.items||''}</div>
+        <div class="notif-time">${o.total||''} · ${ta(o.created_at)}</div>
+      </div>`)
+    ].join('');
+    for(const n of myBadge.filter(n=>n.status==='new'))await sbPatch('nodens_orders',n.id,{status:'completed'},token);
+  }catch(e){if(el)el.innerHTML='<div class="empty-state">Could not load.</div>';}
+}
+
+// SALES
+function renderSales(){
+  const todayO=allOrders.filter(o=>isToday(o.created_at)&&o.kind==='order'&&o.status==='completed');
+  const total=todayO.reduce((s,o)=>s+pp(o.total),0);
+  document.getElementById('salRev').textContent='£'+total.toFixed(2);
+  document.getElementById('salOrd').textContent=todayO.length;
+  document.getElementById('salAvg').textContent='£'+(todayO.length?total/todayO.length:0).toFixed(2);
+  const el=document.getElementById('salList');if(!el)return;
+  el.innerHTML=todayO.length?todayO.map(ordCard).join(''):'<div class="empty-state">No completed orders today.</div>';
+}
+
+// TOAST
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+// MOBILE SIDEBAR
+const sidebar  = document.getElementById('sidebar');
+const menuBtn  = document.getElementById('menuToggle');
+const overlay  = document.createElement('div');
+overlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99';
+document.body.appendChild(overlay);
+
+function openSidebar(){  sidebar.classList.add('mob-open');    overlay.style.display='block'; }
+function closeSidebar(){ sidebar.classList.remove('mob-open'); overlay.style.display='none';  }
+
+if(menuBtn) menuBtn.addEventListener('click', () => sidebar.classList.contains('mob-open') ? closeSidebar() : openSidebar());
+overlay.addEventListener('click', closeSidebar);
+document.querySelectorAll('.nav-item').forEach(b => b.addEventListener('click', () => { if(window.innerWidth < 900) closeSidebar(); }));
+
+// INIT
+if(!checkResetHash())showScreen('signup');
+</script>
+</body>
+</html>
